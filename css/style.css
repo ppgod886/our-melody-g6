@@ -1,0 +1,540 @@
+/* ============================================================
+   《我们的乐章》 OUR MELODY —— 视觉
+   黑夜 · 香槟金 · 环形五线谱 · 微光尘埃
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", sans-serif;
+  color: #e8d5ae;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* 暖金色的舞台中心光 */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 62% 48% at 50% 50%,
+    #2a1a08 0%, #170f05 42%, #070503 68%, #000 100%);
+  z-index: 0;
+}
+
+#dust { position: fixed; inset: 0; z-index: 1; }
+
+#vignette {
+  position: fixed; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%,
+    transparent 52%, rgba(0,0,0,.55) 82%, rgba(0,0,0,.85) 100%);
+}
+
+#stage {
+  position: fixed; inset: 0; z-index: 2;
+  width: 100%; height: 100%;
+}
+
+/* ---------- 环形五线谱 ---------- */
+.staff {
+  fill: none;
+  stroke: url(#gStaff);
+  stroke-width: 1;
+  filter: url(#fSoft);
+}
+.ring-ghost { fill: none; stroke: #c99b4e; opacity: .07; stroke-width: 1; }
+
+.comet {
+  fill: none;
+  stroke: url(#gComet);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  filter: url(#fGlow);
+  stroke-dasharray: 14 86;
+  stroke-dashoffset: 0;
+  animation: cometRun 18s linear infinite;
+  pointer-events: none;
+}
+.comet.c2 { animation-duration: 26s; animation-direction: reverse; opacity: .5; stroke-width: 1.6; }
+@keyframes cometRun { to { stroke-dashoffset: -200; } }
+
+.arc {
+  stroke: #f3c87e;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0;
+  transition: opacity .7s;
+  filter: url(#fGlow);
+  pointer-events: none;
+}
+.arc.warm { opacity: .35; }
+.arc.hot  { opacity: .95; }
+
+.archit { cursor: pointer; pointer-events: stroke; }
+
+/* ---------- 音符 ---------- */
+.note { transition: opacity .8s; }
+.note.dim { opacity: .18; pointer-events: none; }
+
+.note .halo {
+  fill: url(#gHalo);
+  opacity: 0;
+  transition: opacity 1.2s;
+}
+.note.lit .halo { opacity: .85; animation: haloPulse 3.2s ease-in-out infinite; }
+@keyframes haloPulse {
+  0%, 100% { opacity: .55; } 50% { opacity: .95; }
+}
+
+.note .oring {
+  fill: none;
+  stroke: #f6cf8b;
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  opacity: 0;
+  transition: opacity .8s;
+}
+.note.lit .oring { opacity: .8; animation: ringSpin 14s linear infinite; }
+@keyframes ringSpin { to { stroke-dashoffset: -160; } }
+
+.note .tilt { transform-box: fill-box; transform-origin: center; }
+
+/* 悬浮呼吸放在外层 .bob，避免与悬停/闪光的 transform 互相覆盖 */
+.note .bob {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: noteFloat 4.6s ease-in-out infinite;
+  animation-delay: calc(var(--fi, 0) * -0.9s);
+}
+@keyframes noteFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.note .glyph {
+  fill: url(#gGold);
+  filter: url(#fGlow);
+  cursor: pointer;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform .35s cubic-bezier(.2,.8,.3,1.2), filter .35s;
+}
+.note:hover .glyph { transform: scale(1.28); }
+.note.lit .glyph { animation: litBreath 3.4s ease-in-out infinite; }
+
+@keyframes litBreath { 0%,100% { opacity: 1; } 50% { opacity: .82; } }
+
+.note.flash .glyph {
+  animation: flashBig .95s cubic-bezier(.2,.8,.3,1) both;
+}
+@keyframes flashBig {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(2.1); filter: brightness(2.4); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.note .hit { cursor: pointer; }
+
+.note .mini {
+  fill: #d9b36a;
+  font-size: 12px;
+  letter-spacing: 2px;
+  opacity: 0;
+  transition: opacity .8s;
+}
+.note.lit .mini { opacity: .75; }
+#stage.solo .note .mini { opacity: 0; }
+
+/* ---------- 浮现的姓名与职责 ---------- */
+.lbl { opacity: 0; transition: opacity .9s; pointer-events: none; }
+.lbl.show { opacity: 1; }
+.lbl .nm {
+  fill: #ffe9c0;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  filter: url(#fSoft);
+  paint-order: stroke;
+  stroke: rgba(8, 5, 1, .65);
+  stroke-width: 4px;
+}
+.lbl .rl {
+  fill: #c9a35e;
+  font-size: 12px;
+  letter-spacing: 3px;
+  paint-order: stroke;
+  stroke: rgba(8, 5, 1, .65);
+  stroke-width: 3px;
+}
+
+/* ---------- 固定信息 ---------- */
+header {
+  position: fixed; z-index: 5;
+  top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 26px 38px;
+  font-size: 12px; letter-spacing: 4px;
+  color: #c9a35e;
+  pointer-events: none;
+}
+header .brand b { color: #f0d9a8; font-weight: 600; }
+header .en { opacity: .7; }
+
+#cornerBR {
+  position: fixed; z-index: 5; right: 38px; bottom: 30px;
+  font-size: 12px; letter-spacing: 3px; color: #a08048;
+  pointer-events: none;
+}
+
+/* 底部提示 */
+#hint {
+  position: fixed; z-index: 5;
+  left: 50%; bottom: 96px;
+  transform: translateX(-50%) translateY(10px);
+  font-size: 14px; letter-spacing: 4px;
+  color: #d9bc85;
+  opacity: 0;
+  transition: opacity 1.2s, transform 1.2s;
+  pointer-events: none;
+  text-shadow: 0 0 18px rgba(240, 190, 100, .45);
+  white-space: nowrap;
+}
+#hint.show { opacity: .92; transform: translateX(-50%) translateY(0); }
+
+/* 声部标签牌 */
+#chip {
+  position: fixed; z-index: 5;
+  top: 20px; left: 50%;
+  transform: translateX(-50%) translateY(-14px);
+  text-align: center;
+  opacity: 0;
+  transition: opacity .9s, transform .9s;
+  pointer-events: none;
+}
+#chip.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#chipName {
+  font-family: "Noto Serif SC", "STZhongsong", "SimSun", serif;
+  font-size: 24px; letter-spacing: 8px; color: #f4dfae;
+  text-shadow: 0 0 26px rgba(240,190,100,.5);
+}
+#chipEn { margin-top: 8px; font-size: 11px; letter-spacing: 3px; color: #a8894f; }
+#chipBack { margin-top: 10px; font-size: 11px; letter-spacing: 3px; color: #7c6636; }
+
+/* 进度 */
+#progress {
+  position: fixed; z-index: 5; left: 38px; bottom: 28px;
+  pointer-events: none;
+}
+#ptext { font-size: 12px; letter-spacing: 3px; color: #c9a35e; }
+#dots { margin-top: 10px; display: flex; gap: 14px; }
+.dgrp { display: flex; gap: 7px; }
+#dots i {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(217, 179, 106, .16);
+  border: 1px solid rgba(217, 179, 106, .35);
+  transition: all .6s;
+}
+#dots i.on {
+  background: #f6cf8b;
+  border-color: #ffe9c0;
+  box-shadow: 0 0 10px rgba(246, 207, 139, .9);
+}
+
+/* ---------- 入场门 ---------- */
+#gate {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 46%, #140d04 0%, #050302 55%, #000 100%);
+  cursor: pointer;
+  transition: opacity 1.4s;
+}
+#gate.hide { opacity: 0; pointer-events: none; }
+.g-inner { text-align: center; animation: gateIn 2.2s ease both; }
+@keyframes gateIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; } }
+
+.g-ovl { font-size: 12px; letter-spacing: 10px; color: #a8894f; }
+.g-title {
+  margin-top: 26px;
+  font-family: "Noto Serif SC", "STZhongsong", "SimSun", serif;
+  font-size: 64px; font-weight: 900; letter-spacing: 22px;
+  color: #f7e3b1;
+  text-shadow: 0 0 44px rgba(246, 200, 120, .55), 0 0 120px rgba(246, 200, 120, .25);
+  text-indent: 22px; /* 平衡字距 */
+}
+.g-en { margin-top: 18px; font-size: 13px; letter-spacing: 8px; color: #b08d52; }
+.g-line {
+  margin: 34px auto 0; width: 340px;
+  font-size: 13.5px; line-height: 2.2; letter-spacing: 2px; color: #9a7f4e;
+}
+.g-hp { margin-top: 30px; font-size: 13px; letter-spacing: 4px; color: #cfa864; }
+.g-btn {
+  margin: 40px auto 0;
+  width: 168px; height: 52px; line-height: 50px;
+  border: 1px solid rgba(246, 207, 139, .75); border-radius: 40px;
+  font-size: 14px; letter-spacing: 8px; text-indent: 8px; color: #f6d99a;
+  animation: btnBreath 2.6s ease-in-out infinite;
+  transition: background .5s;
+}
+.g-btn:hover { background: rgba(246, 207, 139, .1); }
+@keyframes btnBreath {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(246, 207, 139, .35); }
+  50% { box-shadow: 0 0 26px 3px rgba(246, 207, 139, .28); }
+}
+.g-tip { margin-top: 22px; font-size: 11px; letter-spacing: 3px; color: #6d5930; }
+
+/* ---------- 个人卡片 ---------- */
+#modal {
+  position: fixed; inset: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, .45);
+  opacity: 0; pointer-events: none;
+  transition: opacity .5s;
+}
+#modal.show { opacity: 1; pointer-events: auto; }
+
+#card {
+  position: relative;
+  width: 400px; max-width: 88vw;
+  padding: 46px 44px 38px;
+  background: linear-gradient(160deg, rgba(28,19,8,.96), rgba(12,8,3,.96));
+  border: 1px solid rgba(246, 207, 139, .4);
+  box-shadow: 0 0 60px rgba(0,0,0,.8), 0 0 34px rgba(246,200,120,.12) inset;
+  transform: translateY(14px) scale(.97);
+  transition: transform .5s cubic-bezier(.2,.8,.3,1.1);
+}
+#modal.show #card { transform: translateY(0) scale(1); }
+#card::before, #card::after {
+  content: ""; position: absolute; width: 26px; height: 26px;
+  border-color: #e9c37c; border-style: solid;
+}
+#card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+#card::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+#mclose {
+  position: absolute; top: 10px; right: 14px;
+  background: none; border: none;
+  font-size: 22px; color: #8a6f3e; cursor: pointer;
+  transition: color .3s;
+}
+#mclose:hover { color: #f6d99a; }
+
+.ovl { font-size: 10px; letter-spacing: 5px; color: #a8894f; }
+#mname {
+  margin-top: 16px;
+  font-family: "Noto Serif SC", "STZhongsong", "SimSun", serif;
+  font-size: 46px; font-weight: 900; letter-spacing: 12px;
+  color: #f7e3b1;
+  text-shadow: 0 0 30px rgba(246, 200, 120, .4);
+}
+#mrole { margin-top: 10px; font-size: 13px; letter-spacing: 3px; color: #d9b36a; }
+#mtimbre { margin-top: 6px; font-size: 11px; letter-spacing: 2px; color: #8a7145; }
+
+.card-hr {
+  margin: 24px 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(246,207,139,.55), rgba(246,207,139,0));
+}
+#mquote {
+  font-family: "Noto Serif SC", "STZhongsong", "SimSun", serif;
+  font-size: 18px; line-height: 1.9; letter-spacing: 2px;
+  color: #efddb2;
+}
+#mtrait { margin-top: 16px; font-size: 13px; line-height: 1.9; letter-spacing: 1px; color: #b3925a; }
+
+#mfoot {
+  margin-top: 28px; padding-top: 18px;
+  border-top: 1px dashed rgba(246, 207, 139, .22);
+  font-size: 11px; letter-spacing: 3px; color: #8a7145;
+}
+#mfoot b { color: #f6cf8b; font-weight: 600; }
+
+/* ---------- 终章 ---------- */
+#finale {
+  position: fixed; inset: 0; z-index: 45;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 50% 46%, rgba(20,12,3,.88) 0%, rgba(0,0,0,.94) 70%);
+  opacity: 0; pointer-events: none;
+  transition: opacity 1.8s;
+}
+#finale.show { opacity: 1; pointer-events: auto; }
+.f-inner { text-align: center; padding: 0 24px; animation: gateIn 2s ease both; }
+
+.f-ovl { font-size: 11px; letter-spacing: 8px; color: #a8894f; }
+.f-title {
+  margin-top: 30px;
+  font-family: "Noto Serif SC", "STZhongsong", "SimSun", serif;
+  font-size: 38px; font-weight: 900; line-height: 2; letter-spacing: 8px;
+  color: #f7e3b1;
+  text-shadow: 0 0 40px rgba(246, 200, 120, .5);
+}
+.f-names {
+  margin: 44px auto 0;
+  display: flex; gap: 56px; justify-content: center;
+  flex-wrap: wrap;
+}
+.f-col { min-width: 150px; }
+.f-col h4 {
+  font-size: 11px; font-weight: 400; letter-spacing: 4px;
+  color: #a8894f; padding-bottom: 12px;
+  border-bottom: 1px solid rgba(246,207,139,.2);
+  margin-bottom: 14px;
+}
+.f-col p { font-size: 14px; letter-spacing: 4px; line-height: 2.3; color: #dcc084; }
+
+.f-line { margin-top: 46px; font-size: 13px; letter-spacing: 5px; color: #c9a35e; }
+.f-sub { margin-top: 14px; font-size: 12px; letter-spacing: 3px; color: #7d6838; font-style: italic; }
+
+#replay {
+  margin-top: 44px;
+  padding: 14px 46px;
+  background: none;
+  border: 1px solid rgba(246, 207, 139, .7); border-radius: 40px;
+  font-size: 13px; letter-spacing: 6px; text-indent: 6px;
+  color: #f6d99a; cursor: pointer;
+  transition: background .5s, box-shadow .5s;
+  font-family: inherit;
+}
+#replay:hover {
+  background: rgba(246, 207, 139, .1);
+  box-shadow: 0 0 26px rgba(246, 207, 139, .25);
+}
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 720px) {
+  header { padding: 18px 20px; }
+  header .en { display: none; }
+  #cornerBR { right: 20px; bottom: 20px; }
+  #progress { left: 20px; bottom: 20px; }
+  #hint { bottom: 120px; font-size: 12px; letter-spacing: 2px; white-space: normal; width: 86vw; text-align: center; }
+  .g-title { font-size: 42px; letter-spacing: 12px; text-indent: 12px; }
+  .f-title { font-size: 24px; letter-spacing: 4px; }
+  .f-names { gap: 28px; }
+  #chipName { font-size: 18px; letter-spacing: 4px; }
+}
+
+/* ---------- 名单管理 ---------- */
+.hright { display: flex; align-items: center; gap: 20px; }
+
+#rosterBtn {
+  pointer-events: auto;
+  background: none;
+  border: 1px solid rgba(217, 179, 106, .4);
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 11px; letter-spacing: 3px;
+  color: #c9a35e;
+  cursor: pointer;
+  transition: all .4s;
+  font-family: inherit;
+}
+#rosterBtn:hover {
+  border-color: rgba(246, 207, 139, .8);
+  color: #f6d99a;
+  box-shadow: 0 0 16px rgba(246, 207, 139, .2);
+}
+
+#rosterModal {
+  position: fixed; inset: 0; z-index: 46;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, .55);
+  opacity: 0; pointer-events: none;
+  transition: opacity .45s;
+}
+#rosterModal.show { opacity: 1; pointer-events: auto; }
+
+.rcard {
+  position: relative;
+  width: 460px; max-width: 90vw;
+  padding: 42px 42px 32px;
+  background: linear-gradient(160deg, rgba(28,19,8,.97), rgba(12,8,3,.97));
+  border: 1px solid rgba(246, 207, 139, .4);
+  box-shadow: 0 0 60px rgba(0,0,0,.8), 0 0 34px rgba(246,200,120,.12) inset;
+  transform: translateY(14px) scale(.97);
+  transition: transform .45s cubic-bezier(.2,.8,.3,1.1);
+}
+#rosterModal.show .rcard { transform: translateY(0) scale(1); }
+.rcard::before, .rcard::after {
+  content: ""; position: absolute; width: 26px; height: 26px;
+  border-color: #e9c37c; border-style: solid;
+}
+.rcard::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.rcard::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+.rclose {
+  position: absolute; top: 10px; right: 14px;
+  background: none; border: none;
+  font-size: 22px; color: #8a6f3e; cursor: pointer;
+  transition: color .3s;
+}
+.rclose:hover { color: #f6d99a; }
+
+.rtitle {
+  margin-top: 14px;
+  font-family: "Noto Serif SC", "STZhongsong", "SimSun", serif;
+  font-size: 30px; font-weight: 900; letter-spacing: 8px;
+  color: #f7e3b1;
+  text-shadow: 0 0 26px rgba(246, 200, 120, .4);
+}
+.rdesc {
+  margin-top: 14px;
+  font-size: 13px; line-height: 1.9; letter-spacing: 1px;
+  color: #b3925a;
+}
+.rstatus {
+  margin-top: 18px; padding: 10px 16px;
+  border: 1px dashed rgba(246, 207, 139, .3);
+  font-size: 12px; letter-spacing: 2px; color: #d9b36a;
+}
+.rbtns {
+  margin-top: 22px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.rbtns button {
+  padding: 13px 10px;
+  background: none;
+  border: 1px solid rgba(246, 207, 139, .5);
+  font-size: 13px; letter-spacing: 2px;
+  color: #ecd39c; cursor: pointer;
+  transition: all .4s;
+  font-family: inherit;
+}
+.rbtns button:hover {
+  background: rgba(246, 207, 139, .1);
+  box-shadow: 0 0 18px rgba(246, 207, 139, .2);
+}
+#rreset { border-color: rgba(217, 130, 106, .5); color: #d9a08a; }
+#rreset:hover { background: rgba(217, 130, 106, .08); box-shadow: 0 0 18px rgba(217, 130, 106, .15); }
+
+.rhelp {
+  margin-top: 22px; padding-top: 16px;
+  border-top: 1px dashed rgba(246, 207, 139, .22);
+  font-size: 11px; line-height: 2; letter-spacing: 1px;
+  color: #8a7145;
+}
+
+/* ---------- 浮消息 ---------- */
+#toast {
+  position: fixed; z-index: 60;
+  top: 24px; left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  max-width: 82vw;
+  padding: 12px 26px;
+  background: rgba(20, 13, 4, .95);
+  border: 1px solid rgba(246, 207, 139, .55);
+  box-shadow: 0 0 30px rgba(0,0,0,.6);
+  font-size: 13px; letter-spacing: 2px;
+  color: #f0d9a8;
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s, transform .4s;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.err { border-color: rgba(217, 130, 106, .7); color: #e0a896; }
+
+@media (max-width: 720px) {
+  .rcard { padding: 32px 24px 24px; }
+  .rbtns { grid-template-columns: 1fr; }
+  .rtitle { font-size: 22px; letter-spacing: 4px; }
+}
