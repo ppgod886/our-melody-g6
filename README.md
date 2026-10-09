@@ -49,8 +49,22 @@
 
 ## 线上地址与本地预览
 
-- 线上：https://our-melody-g6.netlify.app
+- **线上（GitHub Pages）**：https://ppgod886.github.io/our-melody-g6/
+- 旧版（Netlify，停更于上传名单功能之前）：https://our-melody-g6.netlify.app
 - 本地：`python -m http.server 8080` 后打开 http://localhost:8080
+
+## 更新网站
+
+改动文件后（例如换了 `js/members.js` 默认名单）：
+
+```bash
+cd 我们的乐章
+git add -A && git commit -m "更新名单"
+# 本机 git 配置了 ghproxy 镜像（只读），推送需绕过：
+git push https://x-access-token:$(gh auth token)@github.com/ppgod886/our-melody-g6.git main
+```
+
+推送后 GitHub Pages 约 1 分钟内自动更新。
 
 ## 技术说明
 
