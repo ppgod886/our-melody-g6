@@ -4,7 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>我们的乐章 · Our Melody — GROUP 06</title>
-<meta name="description" content="十五个音符环绕五线谱排成一个圆环，每一个音符，都是我们小组的一位成员。每个人都有自己的声音，但只有合在一起，才是一首完整的歌。">
+<meta name="description" content="音符环绕五线谱排成一个圆环，每一个音符，都是一位成员。每个人都有自己的声音，但只有合在一起，才是一首完整的歌。">
+<script>
+/* 尽早恢复主题，避免闪色 */
+try { document.documentElement.dataset.theme = localStorage.getItem('ourMelody.theme') || 'light'; }
+catch (e) { document.documentElement.dataset.theme = 'light'; }
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
@@ -17,22 +22,54 @@
 <!-- 环形五线谱 -->
 <svg id="stage" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet">
   <defs>
-    <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1">
+    <!-- 日间：象牙白乐器 -->
+    <linearGradient id="gBlackL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#5d5745"/>
+      <stop offset="18%" stop-color="#39352b"/>
+      <stop offset="60%" stop-color="#211f19"/>
+      <stop offset="100%" stop-color="#12100c"/>
+    </linearGradient>
+    <linearGradient id="gGoldL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#faf0cd"/>
+      <stop offset="45%" stop-color="#e6c687"/>
+      <stop offset="100%" stop-color="#b98f45"/>
+    </linearGradient>
+    <linearGradient id="gStaffL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#a08c66" stop-opacity=".10"/>
+      <stop offset="35%" stop-color="#9a8560" stop-opacity=".42"/>
+      <stop offset="60%" stop-color="#8a744e" stop-opacity=".48"/>
+      <stop offset="100%" stop-color="#a08c66" stop-opacity=".10"/>
+    </linearGradient>
+    <linearGradient id="gCometL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"  stop-color="#c8a05a" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#a67f3c"/>
+    </linearGradient>
+    <radialGradient id="gHaloL">
+      <stop offset="0%"  stop-color="#e8c987" stop-opacity=".75"/>
+      <stop offset="40%" stop-color="#e0bf7d" stop-opacity=".3"/>
+      <stop offset="100%" stop-color="#e0bf7d" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="fShadow" x="-80%" y="-80%" width="260%" height="260%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3.2" flood-color="#6e5836" flood-opacity="0.4"/>
+    </filter>
+
+    <!-- 夜间：黑夜香槟金 -->
+    <linearGradient id="gGoldD" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%"  stop-color="#ffedbe"/>
       <stop offset="55%" stop-color="#f6c878"/>
       <stop offset="100%" stop-color="#c98f3e"/>
     </linearGradient>
-    <linearGradient id="gStaff" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="gStaffD" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%"  stop-color="#8a6a34" stop-opacity=".12"/>
       <stop offset="35%" stop-color="#e9b96a" stop-opacity=".5"/>
       <stop offset="60%" stop-color="#f6d491" stop-opacity=".55"/>
       <stop offset="100%" stop-color="#8a6a34" stop-opacity=".12"/>
     </linearGradient>
-    <linearGradient id="gComet" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="gCometD" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%"  stop-color="#f6c878" stop-opacity="0"/>
       <stop offset="100%" stop-color="#ffe9be"/>
     </linearGradient>
-    <radialGradient id="gHalo">
+    <radialGradient id="gHaloD">
       <stop offset="0%"  stop-color="#ffe9be" stop-opacity=".8"/>
       <stop offset="40%" stop-color="#f6c878" stop-opacity=".34"/>
       <stop offset="100%" stop-color="#f6c878" stop-opacity="0"/>
@@ -80,6 +117,7 @@
 <header>
   <div class="brand"><b>GROUP 06</b> ｜ 我们的乐章</div>
   <div class="hright">
+    <button id="themeBtn" title="切换日间 / 夜间主题">☾</button>
     <button id="rosterBtn" title="上传 / 管理小组名单">⬆ 名单</button>
     <div class="en">OUR MELODY · 15 NOTES · ONE SONG</div>
   </div>
@@ -158,6 +196,7 @@
     <div class="g-ovl">GROUP 06 · 15 NOTES · ONE SONG</div>
     <h1 class="g-title">我们的乐章</h1>
     <div class="g-en">OUR MELODY</div>
+    <div class="g-script">Together We Make Music</div>
     <p class="g-line">
       <span id="gcount">十五个音符</span>环绕五线谱，围成一个圆环。<br>
       每一个音符，都是我们之中的一位。<br>

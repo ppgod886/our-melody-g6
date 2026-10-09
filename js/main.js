@@ -92,8 +92,9 @@ function buildStage() {
   /* 音符 + 备用标签 */
   MEMBERS.forEach((m, i) => {
     const p = ringPoint(noteAngle(i));
-    const g = el('g', { class: 'note', transform: `translate(${p.x.toFixed(1)},${p.y.toFixed(1)})` }, gNotes);
-    g.style.setProperty('--fi', i % 5);
+  const g = el('g', { class: 'note', transform: `translate(${p.x.toFixed(1)},${p.y.toFixed(1)})` }, gNotes);
+  g.style.setProperty('--fi', i % 5);
+  if ((i * 7 + 3) % 2 === 0) g.classList.add('alt');   // 墨黑 / 香槟金交错，像乐器上的按键
     el('circle', { class: 'halo', r: 30 * curF }, g);
     el('circle', { class: 'oring', r: 25 * curF }, g);
     const bob = el('g', { class: 'bob' }, g);
@@ -399,6 +400,9 @@ function dustBurst() {
   }
 }
 function tick() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  const dustRgb = dark ? '255, 214, 140' : '186, 158, 108';
+  const glowRgb = dark ? '255, 190, 100' : '206, 176, 122';
   cx2.clearRect(0, 0, W, H);
   for (const p of parts) {
     p.x += p.vx; p.y -= p.vy; p.tw += 0.02 * p.ts;
@@ -412,12 +416,12 @@ function tick() {
     if (alpha <= 0.01) continue;
     cx2.beginPath();
     cx2.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    cx2.fillStyle = `rgba(255, 214, 140, ${alpha.toFixed(3)})`;
+    cx2.fillStyle = `rgba(${dustRgb}, ${alpha.toFixed(3)})`;
     cx2.fill();
     if (p.r > 1.6) {
       cx2.beginPath();
       cx2.arc(p.x, p.y, p.r * 3.2, 0, Math.PI * 2);
-      cx2.fillStyle = `rgba(255, 190, 100, ${(alpha * 0.08).toFixed(3)})`;
+      cx2.fillStyle = `rgba(${glowRgb}, ${(alpha * 0.08).toFixed(3)})`;
       cx2.fill();
     }
   }
@@ -445,4 +449,18 @@ tick();
     getLabel: () => rosterLabel,
     toast,
   });
+
+  /* ---------- 主题切换（日间象牙白 / 夜间黑金） ---------- */
+  const themeBtn = document.getElementById('themeBtn');
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    themeBtn.textContent = t === 'dark' ? '☀' : '☾';
+    themeBtn.title = t === 'dark' ? '切换到日间 · 象牙白乐器' : '切换到夜间 · 黑金乐章';
+    try { localStorage.setItem('ourMelody.theme', t); } catch (e) {}
+  }
+  themeBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
 })();
