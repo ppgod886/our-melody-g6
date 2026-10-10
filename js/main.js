@@ -22,6 +22,15 @@ let noteEls = [], labelEls = [], arcEls = [];
 let curStep = 24;          // 相邻两枚音符的夹角
 let curF = 1;              // 音符尺寸系数（人多了自动缩小）
 
+/* ---------- 环的缓慢旋转（音乐盒转盘） ---------- */
+let spinDeg = 0;                       // 当前旋转角
+const SPIN_PER_SEC = 360 / 75;         // 75 秒一圈，安静地转
+let noteBaseAngles = [];               // 每枚音符的基准角
+let arcRangesGlobal = [];              // 每个声部的弧线范围
+let arcHitEls = [];                    // 弧线热区（路径随旋转更新）
+let lastT = 0;
+const REDUCE_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 function el(tag, attrs, parent) {
   const n = document.createElementNS(NS, tag);
   for (const k in attrs) n.setAttribute(k, attrs[k]);
@@ -59,6 +68,7 @@ function buildStage() {
   curStep = 360 / N;
   curF = scaleFor(N);
   const noteAngle = i => -90 + i * curStep;
+  noteBaseAngles = MEMBERS.map((_, i) => noteAngle(i));
 
   gArcs.innerHTML = ''; gNotes.innerHTML = ''; gLabels.innerHTML = '';
   noteEls = []; labelEls = []; arcEls = [];
@@ -79,6 +89,7 @@ function buildStage() {
       'stroke-width': 52,
     }, gArcs);
     arcEls[rg.s] = vis;
+    arcHitEls[rg.s] = hit;
     hit.addEventListener('click', e => {
       e.stopPropagation();
       if (finaleDone) return;
@@ -156,6 +167,8 @@ function buildStage() {
   document.getElementById('finale').classList.remove('show');
   buildFinaleNames();
   updateProgress();
+  arcRangesGlobal = ranges.map(r => ({ s: r.s, a: r.a, b: r.b }));
+  layoutRing();
 }
 
 function sizeOf(i) { return [32, 37, 34][i % 3]; }
@@ -401,10 +414,35 @@ function dustBurst() {
     });
   }
 }
-function tick() {
+/* 每帧按旋转角重排音符 / 标签 / 声部弧线 */
+function layoutRing() {
+  if (!noteEls.length) return;
+  const pad = curStep * 0.35;
+  for (let i = 0; i < MEMBERS.length; i++) {
+    const p = ringPoint(noteBaseAngles[i] + spinDeg);
+    const t = `translate(${p.x.toFixed(1)},${p.y.toFixed(1)})`;
+    noteEls[i].setAttribute('transform', t);
+    if (labelEls[i]) labelEls[i].setAttribute('transform', t);
+  }
+  arcRangesGlobal.forEach((rg, k) => {
+    const d = ellipseArc(noteBaseAngles[rg.a] - pad + spinDeg, noteBaseAngles[rg.b] + pad + spinDeg);
+    if (arcEls[k]) arcEls[k].setAttribute('d', d);
+    if (arcHitEls[k]) arcHitEls[k].setAttribute('d', d);
+  });
+}
+
+function tick(ts) {
   const dark = document.documentElement.dataset.theme === 'dark';
   const dustRgb = dark ? '255, 214, 140' : '186, 158, 108';
   const glowRgb = dark ? '255, 190, 100' : '206, 176, 122';
+  /* 旋转推进（进入后才开始转，尊重系统"减弱动态效果"设置） */
+  if (!lastT) lastT = ts;
+  const dt = Math.min(100, ts - lastT);
+  lastT = ts;
+  if (!REDUCE_MOTION && entered) {
+    spinDeg = (spinDeg + dt * 0.001 * SPIN_PER_SEC) % 360;
+    layoutRing();
+  }
   cx2.clearRect(0, 0, W, H);
   for (const p of parts) {
     p.x += p.vx; p.y -= p.vy; p.tw += 0.02 * p.ts;
