@@ -411,6 +411,16 @@ header .en { opacity: .7; }
 }
 #mclose:hover { color: var(--accent); }
 
+/* 成员代表物照片（圆形头像，右上角） */
+#mimg {
+  position: absolute; top: 34px; right: 36px;
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 6px 18px var(--card-shadow);
+}
+
 .ovl { font-size: 10px; letter-spacing: 5px; color: var(--ink-faint); }
 #mname {
   margin-top: 16px;

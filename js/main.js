@@ -214,6 +214,8 @@ function openModal(i) {
     '音高 ' + m.pitch + ' ｜ 音色 · ' + (WAVE_NAME[m.timbre.wave] || '合成音色');
   document.getElementById('mquote').textContent = '「' + (m.quote || '……') + '」';
   document.getElementById('mtrait').textContent = '✦ ' + (m.trait || '还没留下介绍。');
+  const mimg = document.getElementById('mimg');
+  if (m.img) { mimg.src = m.img; mimg.hidden = false; } else { mimg.hidden = true; }
   document.getElementById('mcount').textContent = litCount + ' / ' + MEMBERS.length;
   modal.classList.add('show');
   modalOpen = true;
