@@ -155,10 +155,12 @@ const AudioEngine = (() => {
   }
 
   /* 一个成员的声音：主振荡 + 高八度微光 + 低通 + 包络 */
+  const VALID_WAVES = ['sine', 'triangle', 'sawtooth', 'square'];
   function voice(mi, t, dur, vel, bus) {
     const m = MEMBERS[mi], tb = m.timbre;
     const f = noteFreq(m.pitch) || 261.63;
     vel = Math.min(1, vel);
+    const wave = VALID_WAVES.includes(tb.wave) ? tb.wave : 'sine';
 
     const g = ctx.createGain(); g.gain.value = 0;
     const flt = ctx.createBiquadFilter();
@@ -166,7 +168,7 @@ const AudioEngine = (() => {
     flt.connect(g); g.connect(bus);
 
     const o1 = ctx.createOscillator();
-    o1.type = tb.wave; o1.frequency.value = f;
+    o1.type = wave; o1.frequency.value = f;
     o1.detune.value = (mi % 2 ? 4 : -4);
     o1.connect(flt); o1.start(t);
 
@@ -220,10 +222,16 @@ const AudioEngine = (() => {
       } else if (mode === 'finale') {
         const s = step % 32;
         if (s === 0) rolledChord(nextT, 0.62);
-        if (s === 16) [5, 7, 9].forEach((mi, k) => voice(mi, nextT + k * 0.03, 6, 0.26, master));
+        if (s === 16) {
+          const midStart = SEC_START[1];
+          for (let k = 0; k < Math.min(3, SEC_SIZE[1]); k++) {
+            const mi = midStart + k;
+            if (mi < MEMBERS.length) voice(mi, nextT + k * 0.03, 6, 0.26, master);
+          }
+        }
         if (s % 4 === 2) {
           const hi = SEC_START[2] + Math.floor(Math.random() * Math.max(1, SEC_SIZE[2]));
-          voice(hi, nextT, 2.5, 0.15 * boosts[hi], master);
+          if (hi < MEMBERS.length) voice(hi, nextT, 2.5, 0.15 * boosts[hi], master);
         }
       }
       step++; nextT += STEP_DUR;
@@ -266,7 +274,7 @@ const AudioEngine = (() => {
 
   function finale() {
     if (!ctx) return;
-    mode = 'finale'; step = 0;
+    mode = 'finale'; step = 1;   // 跳过调度器 s=0，避免与下面的直接和弦叠两次
     const now = ctx.currentTime;
     nextT = now + 0.15;
     loopBus.gain.setTargetAtTime(0, now, 0.3);

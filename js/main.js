@@ -50,7 +50,8 @@ function ringPoint(deg) {
 function ellipseArc(a0, a1) {
   const p0 = ringPoint(a0), p1 = ringPoint(a1);
   const large = (a1 - a0) > 180 ? 1 : 0;
-  return `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} A ${RX} ${RY} ${ROT} 0 ${large} ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+  // sweep=1：沿参数角递增方向（屏幕上的顺时针），圆心才能解回 (CX,CY)
+  return `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} A ${RX} ${RY} ${ROT} ${large} 1 ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
 }
 
 const glyphOf = i => (i % 3 === 0 ? '♫' : '♪');
@@ -64,6 +65,7 @@ const gLabels = document.getElementById('labels');
 function scaleFor(n) { return n <= 15 ? 1 : n <= 24 ? 0.78 : 0.6; }
 
 function buildStage() {
+  finaleTimers.forEach(clearTimeout); finaleTimers = [];
   const N = MEMBERS.length;
   curStep = 360 / N;
   curF = scaleFor(N);
@@ -245,6 +247,7 @@ document.getElementById('mclose').addEventListener('click', e => { e.stopPropaga
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(false); });
 
 /* ---------- 终章：全员一起响 ---------- */
+let finaleTimers = [];
 function startFinale() {
   finaleDone = true;
   activeSection = -1;
@@ -260,16 +263,19 @@ function startFinale() {
 
   const gap = Math.max(40, Math.round(1400 / MEMBERS.length));
   noteEls.forEach((n, i) => {
-    setTimeout(() => {
+    finaleTimers.push(setTimeout(() => {
       n.classList.add('flash');
-      setTimeout(() => n.classList.remove('flash'), 950);
-    }, 200 + i * gap);
+      finaleTimers.push(setTimeout(() => n.classList.remove('flash'), 950));
+    }, 200 + i * gap));
   });
-  setTimeout(() => dustBurst(), 1300);
-  setTimeout(() => document.getElementById('finale').classList.add('show'), 3400);
+  finaleTimers.push(setTimeout(() => dustBurst(), 1300));
+  finaleTimers.push(setTimeout(() => {
+    if (finaleDone) document.getElementById('finale').classList.add('show');
+  }, 3400));
 }
 
 function resetAll() {
+  finaleTimers.forEach(clearTimeout); finaleTimers = [];
   lit.fill(false); litCount = 0; finaleDone = false; modalOpen = false;
   noteEls.forEach(n => n.classList.remove('lit', 'flash'));
   svg.classList.remove('finale', 'solo');
@@ -480,6 +486,8 @@ tick();
     MEMBERS = stored.members;
     if (stored.sections && stored.sections.length === 3) SECTIONS = stored.sections;
     rosterLabel = stored.label || '上传名单';
+    // 关键：换名单后必须重排编曲，否则调度器会引用越界下标导致整曲无声
+    AudioEngine.rebuild(MEMBERS);
   }
   buildStage();
   Roster.initUI({
